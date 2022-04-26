@@ -28,6 +28,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import os
 from pathlib import Path
 import subprocess
 import shutil
@@ -38,9 +39,17 @@ import typer
 app = typer.Typer(add_completion=False)
 
 
-def call(command: List[str]):
+def call(command: List[str], quiet: bool = False):
+    """
+    Call (and echo) a shell command, optionally echoing the output.
+    """
+
     typer.echo(f"> {' '.join(command)}")
-    subprocess.call(command)
+
+    if quiet:
+        subprocess.call(command, stdout=open(os.devnull, "wb"))
+    else:
+        subprocess.call(command)
 
 
 @app.command()
@@ -70,6 +79,12 @@ def config(
         metavar="PATH",
         help="Path to build root.",
     ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        "-q",
+        help="Silence output from CMake during configuration.",
+    ),
     reset: bool = typer.Option(
         False,
         "--reset",
@@ -96,7 +111,7 @@ def config(
     if cmake_params:
         command += cmake_params
 
-    call(command)
+    call(command, quiet)
 
 
 @app.command()
