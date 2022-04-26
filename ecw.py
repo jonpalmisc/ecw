@@ -28,17 +28,37 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from enum import Enum
 import os
 from pathlib import Path
 import subprocess
 import shutil
 from typing import Optional, List
 
-import typer
 
-app = typer.Typer(
-    add_completion=False, help="Use CMake more efficiently.", no_args_is_help=True
-)
+class BuildMode(str, Enum):
+    """
+    Types of CMake build modes.
+    """
+
+    debug = "d"
+    release = "r"
+    release_with_debug = "w"
+    min_size_release = "s"
+
+    def to_param(self) -> str:
+        """
+        Convert a build mode to a CMAKE_BUILD_TYPE parameter.
+        """
+
+        if self == BuildMode.release:
+            return "Release"
+        elif self == BuildMode.release_with_debug:
+            return "RelWithDebInfo"
+        elif self == BuildMode.min_size_release:
+            return "MinSizeRel"
+
+        return "Debug"
 
 
 def call(command: List[str], quiet: bool = False):
@@ -52,6 +72,16 @@ def call(command: List[str], quiet: bool = False):
         subprocess.call(command, stdout=open(os.devnull, "wb"))
     else:
         subprocess.call(command)
+
+
+import typer
+
+app = typer.Typer(
+    add_completion=False,
+    help="Use CMake more efficiently.",
+    no_args_is_help=True,
+    context_settings=dict(max_content_width=90),
+)
 
 
 @app.command()
@@ -80,6 +110,18 @@ def config(
         resolve_path=True,
         metavar="PATH",
         help="Path to build root.",
+    ),
+    mode: Optional[BuildMode] = typer.Option(
+        BuildMode.debug,
+        "--mode",
+        "-M",
+        help="Type of build to configure.",
+    ),
+    export_cc: bool = typer.Option(
+        False,
+        "--export-cc",
+        "-E",
+        help="Enable generation of 'compile_commands.json'.",
     ),
     quiet: bool = typer.Option(
         False,
@@ -110,6 +152,10 @@ def config(
             shutil.rmtree(build_dir)
 
     command = ["cmake", "-S", str(source_dir), "-B", str(build_dir)]
+    if mode:
+        command += ["-DCMAKE_BUILD_TYPE=" + mode.to_param()]
+    if export_cc:
+        command += ["-DCMAKE_EXPORT_COMPILE_COMMANDS=1"]
     if cmake_params:
         command += cmake_params
 
