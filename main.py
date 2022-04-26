@@ -26,6 +26,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from pathlib import Path
 import subprocess
 from typing import Optional, List
 
@@ -44,19 +45,34 @@ def config(
     cmake_params: Optional[List[str]] = typer.Argument(
         None, help="Additional parameters to pass to CMake."
     ),
-    build_dir: str = typer.Option(
+    source_dir: Path = typer.Option(
+        ".",
+        "--source-dir",
+        "-S",
+        exists=True,
+        file_okay=False,
+        readable=True,
+        resolve_path=True,
+        metavar="PATH",
+        help="Path to source root.",
+    ),
+    build_dir: Path = typer.Option(
         "build",
         "--build-dir",
-        "-d",
-        metavar="DIR",
-        help="Build directory to use.",
+        "-B",
+        file_okay=False,
+        readable=True,
+        writable=True,
+        resolve_path=True,
+        metavar="PATH",
+        help="Path to build root.",
     ),
 ):
     """
     Configure a CMake project.
     """
 
-    command = ["cmake", "-S", ".", "-B", build_dir]
+    command = ["cmake", "-S", str(source_dir), "-B", str(build_dir)]
     if cmake_params:
         command += cmake_params
 
@@ -66,19 +82,23 @@ def config(
 @app.command()
 def build(
     target: str = typer.Argument("all", help="Name of the target to build."),
-    build_dir: str = typer.Option(
+    build_dir: Path = typer.Option(
         "build",
         "--build-dir",
-        "-d",
-        metavar="DIR",
-        help="Directory containing the build setup.",
+        "-B",
+        file_okay=False,
+        readable=True,
+        writable=True,
+        resolve_path=True,
+        metavar="PATH",
+        help="Path to build root.",
     ),
 ):
     """
     Build the CMake project in the current directory.
     """
 
-    command = ["cmake", "--build", build_dir]
+    command = ["cmake", "--build", str(build_dir)]
     if target != "all":
         command += ["-t", target]
 
