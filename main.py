@@ -28,6 +28,7 @@
 
 from pathlib import Path
 import subprocess
+import shutil
 from typing import Optional, List
 
 import typer
@@ -67,10 +68,27 @@ def config(
         metavar="PATH",
         help="Path to build root.",
     ),
+    reset: bool = typer.Option(
+        False,
+        "--reset",
+        "-R",
+        help="Re-create the build root if it already exists.",
+    ),
 ):
     """
     Configure a CMake project.
     """
+
+    # Reset the build directory if requested.
+    if reset:
+
+        # Prevent accidental source code removal due to swapped directories.
+        if build_dir in source_dir.parents:
+            return typer.echo(
+                "Error: Build root contains source root; cannot remove.", err=True
+            )
+        else:
+            shutil.rmtree(build_dir)
 
     command = ["cmake", "-S", str(source_dir), "-B", str(build_dir)]
     if cmake_params:
