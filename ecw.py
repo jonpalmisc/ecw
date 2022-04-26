@@ -36,7 +36,9 @@ from typing import Optional, List
 
 import typer
 
-app = typer.Typer(add_completion=False)
+app = typer.Typer(
+    add_completion=False, help="Use CMake more efficiently.", no_args_is_help=True
+)
 
 
 def call(command: List[str], quiet: bool = False):
