@@ -69,9 +69,12 @@ def call(command: List[str], quiet: bool = False):
     typer.echo(f"> {' '.join(command)}")
 
     if quiet:
-        subprocess.call(command, stdout=open(os.devnull, "wb"))
+        result = subprocess.call(command, stdout=open(os.devnull, "wb"))
     else:
-        subprocess.call(command)
+        result = subprocess.call(command)
+
+    if result != 0:
+        raise typer.Exit(result)
 
 
 import typer
