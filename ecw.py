@@ -167,7 +167,10 @@ def config(
 
 @app.command()
 def build(
-    target: str = typer.Argument("all", help="Name of the target to build."),
+    target: Optional[str] = typer.Argument(None, help="Name of the target to build."),
+    cmake_params: Optional[List[str]] = typer.Argument(
+        None, help="Additional parameters to pass to CMake."
+    ),
     build_dir: Path = typer.Option(
         "build",
         "--build-dir",
@@ -185,8 +188,10 @@ def build(
     """
 
     command = ["cmake", "--build", str(build_dir)]
-    if target != "all":
+    if target != None:
         command += ["-t", target]
+    if cmake_params:
+        command += cmake_params
 
     call(command)
 
