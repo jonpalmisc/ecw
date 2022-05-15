@@ -151,7 +151,7 @@ def config(
             return typer.echo(
                 "Error: Build root contains source root; cannot remove.", err=True
             )
-        else:
+        elif os.path.isdir(build_dir):
             shutil.rmtree(build_dir)
 
     command = ["cmake", "-S", str(source_dir), "-B", str(build_dir)]
