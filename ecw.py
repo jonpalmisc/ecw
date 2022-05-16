@@ -187,6 +187,12 @@ def build(
     Build the CMake project in the current directory.
     """
 
+    # Copy compile_commands.json to workspace root on build
+    cc_path = Path(build_dir) / "compile_commands.json"
+    if cc_path.is_file():
+        dest = Path(build_dir).parent / "compile_commands.json"
+        dest.write_text(cc_path.read_text())
+
     command = ["cmake", "--build", str(build_dir)]
     if target != None:
         command += ["-t", target]
